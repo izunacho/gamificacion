@@ -9,6 +9,12 @@ export const ATTRIBUTE_LABELS: Record<AttributeKey, string> = {
 
 export type Attributes = Record<AttributeKey, number>;
 
+export interface AvatarAppearance {
+  skinColor: string;
+  hairColor: string;
+  outfitColor: string;
+}
+
 export interface Avatar {
   name: string;
   level: number;
@@ -17,6 +23,7 @@ export interface Avatar {
   hp: number;
   maxHp: number;
   attributes: Attributes;
+  appearance: AvatarAppearance;
 }
 
 export interface DailyQuest {

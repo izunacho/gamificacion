@@ -4,6 +4,7 @@ import type {
   Attributes,
   AttributeKey,
   Avatar,
+  AvatarAppearance,
   DailyQuest,
   GameNotification,
   NotificationType,
@@ -14,6 +15,7 @@ import type {
 } from '../types';
 import { attributeGainFor, expToNextLevel } from '../utils/leveling';
 import { todayStr } from '../utils/date';
+import { DEFAULT_APPEARANCE } from '../utils/appearance';
 
 const STREAK_BONUS_INTERVAL = 7;
 const STREAK_BONUS_GOLD = 50;
@@ -37,6 +39,7 @@ function initialAvatar(): Avatar {
     hp: 100,
     maxHp: 100,
     attributes: emptyAttributes(),
+    appearance: { ...DEFAULT_APPEARANCE },
   };
 }
 
@@ -167,6 +170,7 @@ interface GameState {
   buyShopItem: (id: string) => void;
 
   updateAvatarName: (name: string) => void;
+  updateAppearance: (appearance: AvatarAppearance) => void;
 }
 
 export const useGameStore = create<GameState>()(
@@ -443,9 +447,21 @@ export const useGameStore = create<GameState>()(
       updateAvatarName: (name) => {
         set((state) => ({ avatar: { ...state.avatar, name } }));
       },
+
+      updateAppearance: (appearance) => {
+        set((state) => ({ avatar: { ...state.avatar, appearance } }));
+      },
     }),
     {
       name: 'lifequest-storage',
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as { avatar?: Partial<Avatar> } | undefined;
+        if (state?.avatar && !state.avatar.appearance) {
+          state.avatar.appearance = { ...DEFAULT_APPEARANCE };
+        }
+        return state;
+      },
       partialize: (state) => ({
         avatar: state.avatar,
         dailyQuests: state.dailyQuests,
