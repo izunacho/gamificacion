@@ -1,18 +1,50 @@
-import { Coins, Heart, Sparkles } from 'lucide-react';
+import { lazy, Suspense, useState } from 'react';
+import { Coins, Heart, Pencil, Sparkles } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
-import { expToNextLevel, computeTitle } from '../utils/leveling';
+import { expToNextLevel, computeTitle, getDominantKey } from '../utils/leveling';
 import { StatBar } from './StatBar';
 import { ATTRIBUTE_LABELS, type AttributeKey } from '../types';
 import { ATTRIBUTE_STYLE } from '../utils/attributeStyle';
+
+const AvatarViewer = lazy(() => import('../three/AvatarViewer').then((m) => ({ default: m.AvatarViewer })));
+const CustomizeAvatarModal = lazy(() =>
+  import('./CustomizeAvatarModal').then((m) => ({ default: m.CustomizeAvatarModal })),
+);
 
 export function AvatarCard() {
   const avatar = useGameStore((s) => s.avatar);
   const expNeeded = expToNextLevel(avatar.level);
   const title = computeTitle(avatar.attributes, avatar.level);
+  const dominantAttribute = getDominantKey(avatar.attributes, avatar.level);
   const attributeKeys = Object.keys(avatar.attributes) as AttributeKey[];
+  const [showCustomize, setShowCustomize] = useState(false);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-950/60 via-slate-900/60 to-slate-950/60 p-5 shadow-xl shadow-black/30">
+      <div className="relative -mx-5 -mt-5 mb-4 h-56 overflow-hidden rounded-t-2xl bg-gradient-to-b from-indigo-900/30 to-transparent">
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center">
+              <div className="h-24 w-24 animate-pulse rounded-full bg-white/5" />
+            </div>
+          }
+        >
+          <AvatarViewer
+            appearance={avatar.appearance}
+            level={avatar.level}
+            dominantAttribute={dominantAttribute}
+            className="h-full w-full"
+          />
+        </Suspense>
+        <button
+          onClick={() => setShowCustomize(true)}
+          className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-sm hover:bg-black/60 hover:text-white"
+        >
+          <Pencil size={12} />
+          Personalizar
+        </button>
+      </div>
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300/80">{title}</p>
@@ -67,6 +99,12 @@ export function AvatarCard() {
           );
         })}
       </div>
+
+      {showCustomize && (
+        <Suspense fallback={null}>
+          <CustomizeAvatarModal onClose={() => setShowCustomize(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
